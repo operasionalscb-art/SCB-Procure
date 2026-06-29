@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Auth helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserData().role == role;
+    }
+
+    function isAdmin() {
+      return hasRole('Admin');
+    }
+
+    function isPpk() {
+      return hasRole('Pejabat Pembuat Komitmen');
+    }
+
+    function isPenyedia() {
+      return hasRole('Penyedia');
+    }
+
+    // 2. User Profiles Collection Rules
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin() || isPpk());
+      allow create, update: if isSignedIn() && request.auth.uid == userId && 
+        request.resource.data.uid == userId &&
+        request.resource.data.email is string &&
+        request.resource.data.displayName is string &&
+        request.resource.data.role in ['Admin', 'Pejabat Pembuat Komitmen', 'Penyedia', 'Tamu'];
+      allow delete: if isAdmin();
+    }
+
+    // 3. SPK Collection Rules
+    match /spk/{spkId} {
+      // Anyone can read (enables Tamu/Guests to view the dashboard content)
+      allow read: if true;
+      
+      // Only Admin and PPK can create
+      allow create: if isSignedIn() && (isPpk() || isAdmin()) && 
+        request.resource.data.nomorSpk is string &&
+        request.resource.data.namaPaket is string &&
+        request.resource.data.nilaiPengadaan is number &&
+        request.resource.data.status in ['Pending', 'In Progress', 'Completed', 'Cancelled'];
+        
+      // Admin/PPK can update everything. Penyedia can only update status and milestones.
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        isPpk() ||
+        (isPenyedia() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'milestones']))
+      );
+      
+      // Only Admin and PPK can delete
+      allow delete: if isSignedIn() && (isPpk() || isAdmin());
+    }
+  }
+}
