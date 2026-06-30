@@ -89,19 +89,16 @@ export default function SpkPreview({ spk, onBack }: SpkPreviewProps) {
       {/* Optimized for A4 size, padded and bordered like a real physical paper */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-12 print:shadow-none print:border-none print:p-0 text-slate-900 leading-relaxed text-sm">
         
-        {/* KOP SURAT (Official Government/Corporate Header) */}
+        {/* KOP SURAT (Official Corporate/School Header) */}
         <div className="text-center space-y-1 mb-6 border-b-4 border-double border-slate-950 pb-4">
-          <h2 className="text-lg font-bold tracking-wider uppercase text-slate-950">
-            PEMERINTAH PROVINSI DAERAH KHUSUS JAKARTA
-          </h2>
           <h1 className="text-xl font-extrabold tracking-wide uppercase text-slate-950">
-            DINAS KOMUNIKASI, INFORMATIKA DAN STATISTIK
+            SEKOLAH CENDEKIA BAZNAS
           </h1>
-          <p className="text-xs text-slate-600">
-            Gedung Balaikota Blok H Lantai 13, Jl. Medan Merdeka Selatan No. 8-9, Jakarta Pusat
+          <p className="text-xs text-slate-600 font-medium">
+            Jalan Cirangkong No. 14, Desa Cemplang, Kecamatan Cibungbulang, Kabupaten Bogor
           </p>
-          <p className="text-[10px] text-slate-500 font-medium">
-            Telepon: (021) 3822221 | Fax: (021) 3822221 | Website: diskominfo.jakarta.go.id | Email: dki@jakarta.go.id
+          <p className="text-[10px] text-slate-500">
+            Website: cendekiabaznas.sch.id | Email: info@cendekiabaznas.sch.id
           </p>
         </div>
 
@@ -118,7 +115,7 @@ export default function SpkPreview({ spk, onBack }: SpkPreviewProps) {
         {/* PREAMBLE */}
         <div className="space-y-4 mb-6 text-xs sm:text-sm text-justify">
           <p>
-            Yang bertanda tangan di bawah ini selaku <strong>Pejabat Pembuat Komitmen (PPK)</strong> Dinas Komunikasi, Informatika dan Statistik Provinsi DKI Jakarta, selanjutnya disebut sebagai <strong>Pihak Kesatu</strong>, memberikan perintah kerja kepada:
+            Yang bertanda tangan di bawah ini selaku <strong>Pejabat Pembuat Komitmen (PPK)</strong> Sekolah Cendekia BAZNAS, selanjutnya disebut sebagai <strong>Pihak Kesatu</strong>, memberikan perintah kerja kepada:
           </p>
 
           <div className="pl-6 grid grid-cols-3 gap-2">
@@ -168,8 +165,16 @@ export default function SpkPreview({ spk, onBack }: SpkPreviewProps) {
               </tr>
               <tr>
                 <td className="p-3 font-semibold border-r border-slate-950 bg-slate-50/50">Sumber Dana</td>
-                <td className="p-3 text-slate-700">APBD Provinsi DKI Jakarta Tahun Anggaran 2026</td>
+                <td className="p-3 text-slate-700">Anggaran Operasional Sekolah Cendekia BAZNAS Tahun 2026</td>
               </tr>
+              {spk.nomorRekening && (
+                <tr>
+                  <td className="p-3 font-semibold border-r border-slate-950 bg-slate-50/50">Rekening Pembayaran Vendor</td>
+                  <td className="p-3 text-slate-800 font-bold">
+                    {spk.namaBank || 'BSI'} - No. Rekening: {spk.nomorRekening} <span className="font-normal text-slate-600 block text-xs">Atas Nama: {spk.atasNamaRekening || spk.namaVendor}</span>
+                  </td>
+                </tr>
+              )}
               <tr>
                 <td className="p-3 font-semibold border-r border-slate-950 bg-slate-50/50">Status Progress Saat Ini</td>
                 <td className="p-3 font-bold text-slate-900">{spk.status}</td>
@@ -233,8 +238,8 @@ export default function SpkPreview({ spk, onBack }: SpkPreviewProps) {
               <p className="text-xs text-slate-600">Pejabat Pembuat Komitmen (PPK)</p>
             </div>
             <div className="space-y-1">
-              <p className="font-extrabold underline text-slate-950">Ir. Budi Hermawan, M.T.</p>
-              <p className="text-[11px] text-slate-500">NIP. 19740815 199903 1 002</p>
+              <p className="font-extrabold underline text-slate-950">{spk.namaPihakKesatu || 'Ahmad Fauzi, S.Pd., M.M.'}</p>
+              <p className="text-[11px] text-slate-500">{spk.jabatanPihakKesatu || 'Kabag Keuangan & Sarana Prasarana SCB'}</p>
             </div>
           </div>
 

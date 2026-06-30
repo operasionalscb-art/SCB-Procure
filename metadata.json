@@ -1,6 +1,6 @@
 {
-  "name": "SPK Pengadaan Barang dan Jasa",
-  "description": "Sistem Informasi Surat Perintah Kerja (SPK) untuk Pengadaan Barang dan Jasa, dilengkapi dengan Dashboard Pekerjaan, Pembuatan SPK dengan cetak PDF, dan Kalender Timeline Pekerjaan.",
+  "name": "SCB Procurement",
+  "description": "Sistem Pembuatan SPK Pengadaan Barang dan Jasa - Sekolah Cendekia BAZNAS",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

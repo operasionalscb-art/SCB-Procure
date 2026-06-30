@@ -11,7 +11,8 @@ import {
   Building2, 
   ListChecks, 
   Info,
-  CalendarCheck2
+  CalendarCheck2,
+  UserCheck
 } from 'lucide-react';
 
 interface SpkFormProps {
@@ -32,6 +33,15 @@ export default function SpkForm({ spkToEdit, currentUser, onSave, onCancel }: Sp
   const [status, setStatus] = useState<SPK['status']>('Pending');
   const [milestones, setMilestones] = useState<Milestone[]>([]);
 
+  // New fields for Vendor's Bank Account Details
+  const [nomorRekening, setNomorRekening] = useState('');
+  const [namaBank, setNamaBank] = useState('');
+  const [atasNamaRekening, setAtasNamaRekening] = useState('');
+
+  // New fields for Pihak Kesatu Signature (First Party)
+  const [namaPihakKesatu, setNamaPihakKesatu] = useState('Ahmad Fauzi, S.Pd., M.M.');
+  const [jabatanPihakKesatu, setJabatanPihakKesatu] = useState('Kabag Keuangan & Sarana Prasarana SCB');
+
   // Temp state for adding a new milestone
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
   const [newMilestoneDate, setNewMilestoneDate] = useState('');
@@ -51,6 +61,11 @@ export default function SpkForm({ spkToEdit, currentUser, onSave, onCancel }: Sp
       setDetailSpesifikasi(spkToEdit.detailSpesifikasi);
       setStatus(spkToEdit.status);
       setMilestones(spkToEdit.milestones || []);
+      setNomorRekening(spkToEdit.nomorRekening || '');
+      setNamaBank(spkToEdit.namaBank || '');
+      setAtasNamaRekening(spkToEdit.atasNamaRekening || '');
+      setNamaPihakKesatu(spkToEdit.namaPihakKesatu || 'Ahmad Fauzi, S.Pd., M.M.');
+      setJabatanPihakKesatu(spkToEdit.jabatanPihakKesatu || 'Kabag Keuangan & Sarana Prasarana SCB');
     } else {
       // Set some nice default template format for Nomor SPK
       const year = new Date().getFullYear();
@@ -60,6 +75,12 @@ export default function SpkForm({ spkToEdit, currentUser, onSave, onCancel }: Sp
       const today = new Date().toISOString().split('T')[0];
       setTanggalMulai(today);
       
+      setNomorRekening('');
+      setNamaBank('');
+      setAtasNamaRekening('');
+      setNamaPihakKesatu('Ahmad Fauzi, S.Pd., M.M.');
+      setJabatanPihakKesatu('Kabag Keuangan & Sarana Prasarana SCB');
+
       // Default milestones template
       setMilestones([
         { id: 'm-def-1', title: 'Penandatanganan Kontrak & Kickoff', date: today, completed: true }
@@ -108,8 +129,13 @@ export default function SpkForm({ spkToEdit, currentUser, onSave, onCancel }: Sp
         tanggalSelesai,
         detailSpesifikasi,
         status,
-        createdBy: currentUser.displayName || 'Pejabat Pembuat Komitmen',
-        milestones
+        createdBy: currentUser.displayName || 'Staf GA',
+        milestones,
+        nomorRekening,
+        namaBank,
+        atasNamaRekening,
+        namaPihakKesatu,
+        jabatanPihakKesatu
       };
       
       await onSave(payload);
@@ -275,6 +301,99 @@ export default function SpkForm({ spkToEdit, currentUser, onSave, onCancel }: Sp
                   onChange={(e) => setNamaVendor(e.target.value)}
                   className="block w-full pl-9 pr-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800"
                   placeholder="Contoh: CV. Prima Mandiri Sejahtera"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Informasi Rekening Bank Vendor */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-slate-500" />
+              Informasi Rekening Bank Vendor (Untuk Syarat Pembayaran)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Nama Bank */}
+              <div>
+                <label htmlFor="namaBank" className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+                  Nama Bank
+                </label>
+                <input
+                  id="namaBank"
+                  type="text"
+                  value={namaBank}
+                  onChange={(e) => setNamaBank(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 bg-white"
+                  placeholder="Contoh: BSI, Mandiri, BCA"
+                />
+              </div>
+
+              {/* Nomor Rekening */}
+              <div>
+                <label htmlFor="nomorRekening" className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+                  Nomor Rekening
+                </label>
+                <input
+                  id="nomorRekening"
+                  type="text"
+                  value={nomorRekening}
+                  onChange={(e) => setNomorRekening(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 bg-white"
+                  placeholder="Contoh: 7123456789"
+                />
+              </div>
+
+              {/* Atas Nama Rekening */}
+              <div>
+                <label htmlFor="atasNamaRekening" className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+                  Atas Nama Rekening
+                </label>
+                <input
+                  id="atasNamaRekening"
+                  type="text"
+                  value={atasNamaRekening}
+                  onChange={(e) => setAtasNamaRekening(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 bg-white"
+                  placeholder="Contoh: CV. Prima Mandiri Sejahtera"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Penandatangan Pihak Kesatu (PPK / Pejabat) */}
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-3 flex items-center gap-1.5">
+              <UserCheck className="h-3.5 w-3.5 text-slate-500" />
+              Penandatangan Pihak Kesatu (Pejabat Pembuat Komitmen / PPK)
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Nama Lengkap & Gelar */}
+              <div>
+                <label htmlFor="namaPihakKesatu" className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+                  Nama Lengkap & Gelar
+                </label>
+                <input
+                  id="namaPihakKesatu"
+                  type="text"
+                  value={namaPihakKesatu}
+                  onChange={(e) => setNamaPihakKesatu(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 bg-white"
+                  placeholder="Contoh: Ahmad Fauzi, S.Pd., M.M."
+                />
+              </div>
+
+              {/* Jabatan Resmi */}
+              <div>
+                <label htmlFor="jabatanPihakKesatu" className="block text-[11px] font-bold text-slate-600 uppercase tracking-wide">
+                  Jabatan / Keterangan
+                </label>
+                <input
+                  id="jabatanPihakKesatu"
+                  type="text"
+                  value={jabatanPihakKesatu}
+                  onChange={(e) => setJabatanPihakKesatu(e.target.value)}
+                  className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-slate-800 bg-white"
+                  placeholder="Contoh: Kabag Keuangan & Sarana Prasarana SCB"
                 />
               </div>
             </div>

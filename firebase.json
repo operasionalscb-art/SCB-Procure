@@ -1,0 +1,8 @@
+{
+  "firestore": [
+    {
+      "database": "ai-studio-spkpengadaanbara-b20d22a5-dc15-4e17-8eff-ba86749e19bc",
+      "rules": "firestore.rules"
+    }
+  ]
+}

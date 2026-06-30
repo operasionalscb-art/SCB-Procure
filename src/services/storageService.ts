@@ -25,56 +25,56 @@ import { SPK, UserProfile } from '../types';
 const MOCK_SPKS: SPK[] = [
   {
     id: 'spk-001',
-    nomorSpk: '001/SPK-PBJ/DISKOMINFO/2026',
-    namaPaket: 'Pengadaan Server Cloud dan Perangkat Jaringan Dinas Komunikasi',
+    nomorSpk: '001/SPK-PBJ/SCB/2026',
+    namaPaket: 'Pengadaan Chromebook Lab Komputer dan Akses Internet Sekolah Cendekia BAZNAS',
     nilaiPengadaan: 150000000,
     namaVendor: 'PT Solusi Teknologi Nusantara',
     tanggalMulai: '2026-06-15',
     tanggalSelesai: '2026-07-15',
-    detailSpesifikasi: '1. 2 Unit Server High Performance 64GB RAM\n2. 1 Unit Core Switch Managed 24 Port\n3. Setup & Konfigurasi Jaringan Fiber Optic\n4. Garansi & Pemeliharaan 1 Tahun',
+    detailSpesifikasi: '1. 30 Unit Chromebook High Performance 8GB RAM untuk Siswa\n2. 1 Unit Core Router & Access Point Kelas Industri\n3. Setup & Konfigurasi Jaringan Fiber Optic Kampus\n4. Garansi & Pemeliharaan Teknis Selama 1 Tahun',
     status: 'In Progress',
     createdAt: '2026-06-15T09:00:00.000Z',
-    createdBy: 'Pejabat Pembuat Komitmen',
+    createdBy: 'Staf GA',
     milestones: [
-      { id: 'm-1-1', title: 'Pengiriman Perangkat Utama', date: '2026-06-25', completed: true },
-      { id: 'm-1-2', title: 'Instalasi & Konfigurasi Software', date: '2026-07-05', completed: false },
-      { id: 'm-1-3', title: 'Uji Coba & Serah Terima Pekerjaan (UAT)', date: '2026-07-15', completed: false }
+      { id: 'm-1-1', title: 'Pengiriman Perangkat Utama Chromebook & Router', date: '2026-06-25', completed: true },
+      { id: 'm-1-2', title: 'Instalasi Jaringan & Konfigurasi Software Lab', date: '2026-07-05', completed: false },
+      { id: 'm-1-3', title: 'Uji Coba Bersama Santri & Serah Terima Pekerjaan (UAT)', date: '2026-07-15', completed: false }
     ]
   },
   {
     id: 'spk-002',
-    nomorSpk: '002/SPK-PBJ/SETDA/2026',
-    namaPaket: 'Penyediaan Laptop Operasional Bagian Umum Sekretariat Daerah',
-    nilaiPengadaan: 85000000,
-    namaVendor: 'CV Prima Elektronik',
+    nomorSpk: '002/SPK-PBJ/SCB/2026',
+    namaPaket: 'Pengadaan Buku Pelajaran Kurikulum Merdeka dan Referensi Perpustakaan SCB',
+    nilaiPengadaan: 45000000,
+    namaVendor: 'CV Prima Pustaka Utama',
     tanggalMulai: '2026-06-01',
     tanggalSelesai: '2026-06-20',
-    detailSpesifikasi: '1. 10 Unit Laptop Intel Core i5 16GB RAM SSD 512GB\n2. Bundled Windows 11 Original & Office Home Student\n3. Tas Laptop, Mouse Wireless, dan Kelengkapan Standar\n4. Pengiriman Langsung ke Gedung A Kantor Sekretariat Daerah',
+    detailSpesifikasi: '1. Buku Paket Utama Kurikulum Merdeka untuk Kelas X, XI, XII (IPA/IPS)\n2. 150 Judul Buku Referensi Penunjang Olimpiade Sains dan Agama\n3. Buku Cerita Inspiratif & Kamus Bahasa Arab/Inggris\n4. Pelabelan Kode Perpustakaan dan Pengiriman ke Perpustakaan Utama SCB',
     status: 'Completed',
     createdAt: '2026-06-01T08:30:00.000Z',
-    createdBy: 'Pejabat Pembuat Komitmen',
+    createdBy: 'Staf GA',
     milestones: [
-      { id: 'm-2-1', title: 'Pembelian & Pengadaan Unit Laptop', date: '2026-06-05', completed: true },
-      { id: 'm-2-2', title: 'QC Hardware & Instalasi Lisensi Original', date: '2026-06-12', completed: true },
-      { id: 'm-2-3', title: 'Serah Terima Fisik Laptop & Dokumentasi', date: '2026-06-18', completed: true }
+      { id: 'm-2-1', title: 'Pemesanan & Pencetakan Buku Pelajaran', date: '2026-06-05', completed: true },
+      { id: 'm-2-2', title: 'Quality Control Cetak & Pelabelan Kode Perpustakaan', date: '2026-06-12', completed: true },
+      { id: 'm-2-3', title: 'Serah Terima Fisik Buku di Perpustakaan Kampus SCB', date: '2026-06-18', completed: true }
     ]
   },
   {
     id: 'spk-003',
-    nomorSpk: '003/SPK-PBJ/DINSOS/2026',
-    namaPaket: 'Pengadaan Bahan Logistik dan Makanan Sehat Bantuan Sosial',
+    nomorSpk: '003/SPK-PBJ/SCB/2026',
+    namaPaket: 'Penyediaan Bahan Makanan Sehat untuk Konsumsi Santri Boarding School SCB',
     nilaiPengadaan: 210000000,
     namaVendor: 'PT Agro Boga Mandiri',
     tanggalMulai: '2026-07-01',
     tanggalSelesai: '2026-07-20',
-    detailSpesifikasi: '1. 500 Paket Sembako Premium (Beras Pandan Wangi 5kg, Minyak Goreng 2L, Gula Pasir 2kg, Susu Kental Manis 2 kaleng)\n2. Pengemasan Higienis dalam Box Serbaguna berlabel Dinsos\n3. Distribusi Terbagi ke 5 Titik Lokasi Kantor Wilayah Bantuan Sosial\n4. Jaminan Kelayakan dan Kedaluwarsa Minimal 10 Bulan sejak pengiriman',
+    detailSpesifikasi: '1. Pasokan Bahan Pokok (Beras Pandan Wangi 1.5 Ton, Minyak Goreng, Gula, Susu)\n2. Paket Daging Sapi & Ayam Segar, Telur, dan Sayur-Mayur Mingguan\n3. Jaminan Pengiriman Higienis Menggunakan Pendingin (Cold Chain)\n4. Verifikasi Kelayakan Nutrisi dan Tanggal Kedaluwarsa Minimal 10 Bulan',
     status: 'Pending',
     createdAt: '2026-06-28T11:45:00.000Z',
-    createdBy: 'Pejabat Pembuat Komitmen',
+    createdBy: 'Staf GA',
     milestones: [
-      { id: 'm-3-1', title: 'Persiapan Bahan Baku Sembako', date: '2026-07-05', completed: false },
-      { id: 'm-3-2', title: 'Proses Packing & QC Kedaluwarsa', date: '2026-07-12', completed: false },
-      { id: 'm-3-3', title: 'Distribusi dan Verifikasi di 5 Kantor Wilayah', date: '2026-07-20', completed: false }
+      { id: 'm-3-1', title: 'Persiapan Bahan Pokok di Gudang Vendor', date: '2026-07-05', completed: false },
+      { id: 'm-3-2', title: 'Pemeriksaan Kesehatan dan Kebersihan Bahan Baku (QC)', date: '2026-07-12', completed: false },
+      { id: 'm-3-3', title: 'Distribusi Perdana & Penataan di Dapur Kampus SCB', date: '2026-07-20', completed: false }
     ]
   }
 ];

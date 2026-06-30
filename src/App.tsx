@@ -148,7 +148,7 @@ export default function App() {
   };
 
   // Helper permissions
-  const canCreateSpk = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Pejabat Pembuat Komitmen');
+  const canCreateSpk = currentUser && (currentUser.role === 'Admin' || currentUser.role === 'Staf GA');
 
   if (isLoading) {
     return (
@@ -587,8 +587,8 @@ export default function App() {
 
       {/* APP FOOTER - Hidden when printing */}
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-8 print:hidden">
-        <div>&copy; 2026 Sistem Informasi SPK Pengadaan Barang dan Jasa</div>
-        <div className="text-slate-300 mt-0.5">Dinas Komunikasi, Informatika dan Statistik DKI Jakarta</div>
+        <div>&copy; 2026 SCB Procurement</div>
+        <div className="text-slate-300 mt-0.5">Sistem Pembuatan SPK Pengadaan Barang dan Jasa - Sekolah Cendekia BAZNAS</div>
       </footer>
 
     </div>

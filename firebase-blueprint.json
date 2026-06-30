@@ -20,7 +20,7 @@
         },
         "role": {
           "type": "string",
-          "enum": ["Admin", "Pejabat Pembuat Komitmen", "Penyedia", "Tamu"],
+          "enum": ["Admin", "Staf GA", "Pegawai", "Tamu"],
           "description": "User role access control level"
         }
       },
@@ -75,6 +75,26 @@
           "type": "string",
           "description": "Name or role of creator"
         },
+        "nomorRekening": {
+          "type": "string",
+          "description": "Bank account number of vendor"
+        },
+        "namaBank": {
+          "type": "string",
+          "description": "Bank name of vendor"
+        },
+        "atasNamaRekening": {
+          "type": "string",
+          "description": "Bank account holder name of vendor"
+        },
+        "namaPihakKesatu": {
+          "type": "string",
+          "description": "Name of first party signer"
+        },
+        "jabatanPihakKesatu": {
+          "type": "string",
+          "description": "Title/position of first party signer"
+        },
         "milestones": {
           "type": "array",
           "description": "Progress milestones list"
@@ -87,6 +107,10 @@
     "users/{userId}": {
       "schema": "UserProfile",
       "description": "User profile collection indexed by authentication UID"
+    },
+    "app_users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Application user profile collection indexed by authentication UID"
     },
     "spk/{spkId}": {
       "schema": "SPK",

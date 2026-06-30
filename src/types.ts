@@ -18,6 +18,11 @@ export interface SPK {
   createdAt: string;
   createdBy: string;
   milestones: Milestone[];
+  nomorRekening?: string;
+  namaBank?: string;
+  atasNamaRekening?: string;
+  namaPihakKesatu?: string;
+  jabatanPihakKesatu?: string;
 }
 
 export interface UserPermissions {
