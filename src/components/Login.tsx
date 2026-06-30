@@ -373,51 +373,6 @@ export default function Login({
             </p>
           </div>
 
-          {/* Quick Preset Accounts Section */}
-          <div className="mt-8 pt-5 border-t border-slate-100">
-            <div className="flex items-center gap-1.5 mb-3 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-              <HelpCircle className="h-3.5 w-3.5 text-slate-400" />
-              Demo Akun Instan (Seeded Database)
-            </div>
-            <div className="grid grid-cols-1 gap-2.5">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('operasional.scb@gmail.com', 'admin123')}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-left hover:bg-blue-50 hover:border-blue-200 transition text-slate-700 cursor-pointer group"
-              >
-                <div>
-                  <span className="font-extrabold block text-slate-800 text-[11px]">operasional.scb@gmail.com</span>
-                  <span className="text-[10px] text-slate-500 font-medium">Sandi: <strong className="font-bold text-slate-600">admin123</strong> (Role: <span className="font-bold text-blue-600">Admin</span>)</span>
-                </div>
-                <Sparkles className="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition shrink-0" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('ga@gmail.com', 'ga123')}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-left hover:bg-emerald-50 hover:border-emerald-200 transition text-slate-700 cursor-pointer group"
-              >
-                <div>
-                  <span className="font-extrabold block text-slate-800 text-[11px]">ga@gmail.com</span>
-                  <span className="text-[10px] text-slate-500 font-medium">Sandi: <strong className="font-bold text-slate-600">ga123</strong> (Role: <span className="font-bold text-emerald-600">Staf GA</span>)</span>
-                </div>
-                <Sparkles className="h-4 w-4 text-slate-300 group-hover:text-emerald-500 transition shrink-0" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('pegawai@gmail.com', 'pegawai123')}
-                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-left hover:bg-purple-50 hover:border-purple-200 transition text-slate-700 cursor-pointer group"
-              >
-                <div>
-                  <span className="font-extrabold block text-slate-800 text-[11px]">pegawai@gmail.com</span>
-                  <span className="text-[10px] text-slate-500 font-medium">Sandi: <strong className="font-bold text-slate-600">pegawai123</strong> (Role: <span className="font-bold text-purple-600">Pegawai</span>)</span>
-                </div>
-                <Sparkles className="h-4 w-4 text-slate-300 group-hover:text-purple-500 transition shrink-0" />
-              </button>
-            </div>
-          </div>
-
         </div>
       </div>
     </div>
