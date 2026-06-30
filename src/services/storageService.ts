@@ -84,25 +84,57 @@ const DEFAULT_USERS: UserProfile[] = [
     uid: 'admin-123',
     email: 'admin@spk.go.id',
     displayName: 'Ahmad Subarjo',
-    role: 'Admin'
+    role: 'Admin',
+    permissions: {
+      canViewDashboard: true,
+      canManageUsers: true,
+      canCreateReports: true,
+      canApproveRequests: true,
+      canEditSettings: true
+    },
+    createdAt: new Date().toISOString()
   },
   {
     uid: 'ppk-123',
     email: 'ppk@spk.go.id',
     displayName: 'Ir. Budi Hermawan',
-    role: 'Pejabat Pembuat Komitmen'
+    role: 'Staf GA',
+    permissions: {
+      canViewDashboard: true,
+      canManageUsers: false,
+      canCreateReports: true,
+      canApproveRequests: true,
+      canEditSettings: false
+    },
+    createdAt: new Date().toISOString()
   },
   {
     uid: 'vendor-123',
     email: 'vendor@spk.go.id',
     displayName: 'PT Solusi Teknologi',
-    role: 'Penyedia'
+    role: 'Pegawai',
+    permissions: {
+      canViewDashboard: true,
+      canManageUsers: false,
+      canCreateReports: true,
+      canApproveRequests: false,
+      canEditSettings: false
+    },
+    createdAt: new Date().toISOString()
   },
   {
     uid: 'operasional-123',
     email: 'operasional.scb@gmail.com',
     displayName: 'Tim Operasional SCB',
-    role: 'Pejabat Pembuat Komitmen'
+    role: 'Admin',
+    permissions: {
+      canViewDashboard: true,
+      canManageUsers: true,
+      canCreateReports: true,
+      canApproveRequests: true,
+      canEditSettings: true
+    },
+    createdAt: new Date().toISOString()
   }
 ];
 
@@ -124,7 +156,15 @@ initLocalStorage();
 export const storageService = {
   // Check if real Firebase is configured
   isFirebaseActive(): boolean {
+    if (localStorage.getItem('prefer_local_sandbox') === 'true') {
+      return false;
+    }
     return isFirebaseConfigured && db !== null && auth !== null;
+  },
+
+  // Set Firebase Mode preference
+  setFirebaseActive(active: boolean) {
+    localStorage.setItem('prefer_local_sandbox', active ? 'false' : 'true');
   },
 
   // ------------------------------------------
@@ -147,7 +187,15 @@ export const storageService = {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email || '',
                 displayName: firebaseUser.displayName || 'Pengguna Baru',
-                role: 'Pejabat Pembuat Komitmen'
+                role: 'Pegawai',
+                permissions: {
+                  canViewDashboard: true,
+                  canManageUsers: false,
+                  canCreateReports: true,
+                  canApproveRequests: false,
+                  canEditSettings: false
+                },
+                createdAt: new Date().toISOString()
               });
             }
           } catch (e) {
@@ -155,7 +203,15 @@ export const storageService = {
               uid: firebaseUser.uid,
               email: firebaseUser.email || '',
               displayName: firebaseUser.displayName || 'Pengguna',
-              role: 'Pejabat Pembuat Komitmen'
+              role: 'Pegawai',
+              permissions: {
+                canViewDashboard: true,
+                canManageUsers: false,
+                canCreateReports: true,
+                canApproveRequests: false,
+                canEditSettings: false
+              },
+              createdAt: new Date().toISOString()
             });
           }
         } else {
@@ -196,7 +252,21 @@ export const storageService = {
           uid,
           email,
           displayName: userCredential.user.displayName || email.split('@')[0],
-          role: email.includes('vendor') ? 'Penyedia' : email.includes('admin') ? 'Admin' : 'Pejabat Pembuat Komitmen'
+          role: email.includes('admin') ? 'Admin' : email.includes('ga') ? 'Staf GA' : 'Pegawai',
+          permissions: email.includes('admin') ? {
+            canViewDashboard: true,
+            canManageUsers: true,
+            canCreateReports: true,
+            canApproveRequests: true,
+            canEditSettings: true
+          } : {
+            canViewDashboard: true,
+            canManageUsers: false,
+            canCreateReports: true,
+            canApproveRequests: false,
+            canEditSettings: false
+          },
+          createdAt: new Date().toISOString()
         };
         // Save profile
         await setDoc(doc(db!, 'users', uid), defaultProf);
@@ -218,7 +288,21 @@ export const storageService = {
           uid: 'user-' + Date.now(),
           email,
           displayName: email.split('@')[0].toUpperCase(),
-          role: email.includes('vendor') ? 'Penyedia' : email.includes('admin') ? 'Admin' : 'Pejabat Pembuat Komitmen'
+          role: email.includes('admin') ? 'Admin' : email.includes('ga') ? 'Staf GA' : 'Pegawai',
+          permissions: email.includes('admin') ? {
+            canViewDashboard: true,
+            canManageUsers: true,
+            canCreateReports: true,
+            canApproveRequests: true,
+            canEditSettings: true
+          } : {
+            canViewDashboard: true,
+            canManageUsers: false,
+            canCreateReports: true,
+            canApproveRequests: false,
+            canEditSettings: false
+          },
+          createdAt: new Date().toISOString()
         };
         users.push(newProf);
         localStorage.setItem('spk_users', JSON.stringify(users));
@@ -237,7 +321,27 @@ export const storageService = {
         uid,
         email,
         displayName,
-        role
+        role,
+        permissions: role === 'Admin' ? {
+          canViewDashboard: true,
+          canManageUsers: true,
+          canCreateReports: true,
+          canApproveRequests: true,
+          canEditSettings: true
+        } : role === 'Staf GA' ? {
+          canViewDashboard: true,
+          canManageUsers: false,
+          canCreateReports: true,
+          canApproveRequests: true,
+          canEditSettings: false
+        } : {
+          canViewDashboard: true,
+          canManageUsers: false,
+          canCreateReports: true,
+          canApproveRequests: false,
+          canEditSettings: false
+        },
+        createdAt: new Date().toISOString()
       };
       
       await setDoc(doc(db!, 'users', uid), profile);
@@ -255,7 +359,27 @@ export const storageService = {
         uid: 'user-' + Date.now(),
         email,
         displayName,
-        role
+        role,
+        permissions: role === 'Admin' ? {
+          canViewDashboard: true,
+          canManageUsers: true,
+          canCreateReports: true,
+          canApproveRequests: true,
+          canEditSettings: true
+        } : role === 'Staf GA' ? {
+          canViewDashboard: true,
+          canManageUsers: false,
+          canCreateReports: true,
+          canApproveRequests: true,
+          canEditSettings: false
+        } : {
+          canViewDashboard: true,
+          canManageUsers: false,
+          canCreateReports: true,
+          canApproveRequests: false,
+          canEditSettings: false
+        },
+        createdAt: new Date().toISOString()
       };
       
       users.push(newProf);

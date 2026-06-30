@@ -20,9 +20,27 @@ export interface SPK {
   milestones: Milestone[];
 }
 
+export interface UserPermissions {
+  canViewDashboard: boolean;
+  canManageUsers: boolean;
+  canCreateReports: boolean;
+  canApproveRequests: boolean;
+  canEditSettings: boolean;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
-  role: 'Admin' | 'Pejabat Pembuat Komitmen' | 'Penyedia' | 'Tamu';
+  role: 'Admin' | 'Staf GA' | 'Pegawai' | 'Tamu';
+  password?: string; // Stored for administrative review/management as requested
+  division?: string; // Division like Asrama, Kesiswaan, Umum, dsb.
+  permissions: UserPermissions;
+  createdAt: string;
+}
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  isFirebaseMode: boolean; // Indicates if currently running on Live Firebase or Local Sandbox
 }

@@ -98,11 +98,37 @@ export default function Dashboard({
     }
   };
 
-  // Safe checks for permissions (PPK & Admin can create/edit/delete; Vendor can only view and update progress if allowed)
-  const canModify = currentUser.role === 'Admin' || currentUser.role === 'Pejabat Pembuat Komitmen';
+  // Safe checks for permissions (Admin & Staf GA/authorized roles can create/edit/delete)
+  const canModify = currentUser.role === 'Admin' || (currentUser.permissions && currentUser.permissions.canApproveRequests);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 font-sans">
+      
+      {/* GUEST BANNER WARNING */}
+      {currentUser.role === 'Tamu' && (
+        <div id="guest-alert-banner" className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm animate-fade-in">
+          <div className="flex gap-3.5">
+            <div className="h-10 w-10 bg-amber-100 border border-amber-200 text-amber-700 rounded-2xl flex items-center justify-center shrink-0">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-extrabold text-amber-950">Akses Peninjau Terbatas (Mode Tamu)</h3>
+              <p className="text-xs text-amber-800 leading-relaxed font-semibold mt-1">
+                Anda sedang berselancar sebagai <strong className="text-amber-950 font-bold">Pengunjung Anonim</strong>. Anda hanya dapat memantau analisis statistik dan visualisasi data pengadaan. Silakan melakukan login atau pendaftaran mandiri untuk dapat menggunakan fitur interaktif seperti pengisian dokumen SPK, pelaporan, dan persetujuan.
+              </p>
+            </div>
+          </div>
+          {onInitiateLogin && (
+            <button
+              type="button"
+              onClick={onInitiateLogin}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm transition whitespace-nowrap cursor-pointer hover:shadow-md"
+            >
+              Daftar / Masuk Akun &rarr;
+            </button>
+          )}
+        </div>
+      )}
       
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden">

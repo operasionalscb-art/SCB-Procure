@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { storageService } from './services/storageService';
+import { authService } from './services/authService';
 import { SPK, UserProfile } from './types';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
@@ -7,6 +8,7 @@ import SpkForm from './components/SpkForm';
 import SpkPreview from './components/SpkPreview';
 import CalendarView from './components/CalendarView';
 import AccountManagement from './components/AccountManagement';
+import UserManagement from './components/UserManagement';
 import { 
   FileText, 
   Calendar, 
@@ -19,21 +21,31 @@ import {
   RefreshCw,
   Database,
   Cloud,
-  UserCog
+  UserCog,
+  ShieldCheck,
+  Users
 } from 'lucide-react';
 
 const GUEST_USER: UserProfile = {
   uid: 'guest',
   email: 'tamu@spk.go.id',
   displayName: 'Tamu / Pengunjung',
-  role: 'Tamu'
+  role: 'Tamu',
+  permissions: {
+    canViewDashboard: true,
+    canManageUsers: false,
+    canCreateReports: false,
+    canApproveRequests: false,
+    canEditSettings: false
+  },
+  createdAt: new Date().toISOString()
 };
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [spks, setSpks] = useState<SPK[]>([]);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'form' | 'preview' | 'calendar' | 'profile'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'form' | 'preview' | 'calendar' | 'profile' | 'users'>('dashboard');
   const [activeSpkForPreview, setActiveSpkForPreview] = useState<SPK | null>(null);
   const [activeSpkForEdit, setActiveSpkForEdit] = useState<SPK | null>(null);
   
@@ -42,19 +54,28 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isFirebaseActive, setIsFirebaseActive] = useState(false);
 
-  // 1. Listen for Authentication Changes
+  // 1. Listen for Authentication Changes & Seed Database
   useEffect(() => {
-    setIsFirebaseActive(storageService.isFirebaseActive());
-    
-    const unsubscribe = storageService.onAuthChanged((user) => {
-      setCurrentUser(user || GUEST_USER);
+    const initSession = async () => {
+      // Setup Firebase mode indicator
+      setIsFirebaseActive(authService.isFirebaseActive());
+      
+      // Auto seed db with default profiles
+      await authService.initializeDatabase();
+      
+      // Load active session (Dual Persistence key: 'app_auth' and 'app_user')
+      const sessionUser = authService.getActiveSession();
+      if (sessionUser) {
+        setCurrentUser(sessionUser);
+      } else {
+        // Force authentication on first visit, unless choosing guest mode
+        setIsAuthenticating(true);
+      }
       setIsLoading(false);
-    });
-
-    return () => {
-      if (unsubscribe) unsubscribe();
     };
-  }, []);
+
+    initSession();
+  }, [isFirebaseActive]);
 
   // 2. Fetch SPK Data on User Auth
   useEffect(() => {
@@ -118,9 +139,10 @@ export default function App() {
 
   const handleLogout = async () => {
     if (confirm('Apakah Anda yakin ingin keluar dari aplikasi?')) {
-      await storageService.logout();
+      authService.logoutUser();
       setCurrentUser(GUEST_USER);
       setSpks([]);
+      setIsAuthenticating(true);
       setCurrentView('dashboard');
     }
   };
@@ -133,7 +155,7 @@ export default function App() {
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-sm font-bold text-slate-700 animate-pulse">Menghubungkan ke Sistem SPK...</p>
+          <p className="text-sm font-bold text-slate-700 animate-pulse">Menghubungkan ke Sistem Otoritas...</p>
         </div>
       </div>
     );
@@ -148,7 +170,17 @@ export default function App() {
           setIsAuthenticating(false);
         }} 
         isFirebaseActive={isFirebaseActive} 
-        onCancel={() => setIsAuthenticating(false)}
+        onCancel={() => {
+          // If no user exists, set to GUEST_USER and allow them to proceed
+          if (!currentUser) {
+            setCurrentUser(GUEST_USER);
+          }
+          setIsAuthenticating(false);
+        }}
+        onToggleFirebaseMode={(active) => {
+          authService.setFirebaseMode(active);
+          setIsFirebaseActive(active);
+        }}
       />
     );
   }
@@ -195,49 +227,69 @@ export default function App() {
                   Dashboard
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCurrentView('calendar');
-                    setActiveSpkForEdit(null);
-                  }}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                    currentView === 'calendar' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
-                  }`}
-                >
-                  <Calendar className="h-4 w-4 text-indigo-600" />
-                  Kalender Timeline
-                </button>
+                {currentUser.role !== 'Tamu' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentView('calendar');
+                        setActiveSpkForEdit(null);
+                      }}
+                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        currentView === 'calendar' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                      }`}
+                    >
+                      <Calendar className="h-4 w-4 text-indigo-600" />
+                      Kalender Timeline
+                    </button>
 
-                {canCreateSpk && (
+                    {canCreateSpk && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveSpkForEdit(null);
+                          setCurrentView('form');
+                        }}
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                          currentView === 'form' && !activeSpkForEdit ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                        }`}
+                      >
+                        <PlusCircle className="h-4 w-4 text-emerald-600" />
+                        Buat SPK
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveSpkForEdit(null);
+                        setCurrentView('profile');
+                      }}
+                      className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        currentView === 'profile' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                      }`}
+                    >
+                      <UserCog className="h-4 w-4 text-teal-600" />
+                      Pengelolaan Akun
+                    </button>
+                  </>
+                )}
+
+                {currentUser.role === 'Admin' && (
                   <button
                     type="button"
                     onClick={() => {
                       setActiveSpkForEdit(null);
-                      setCurrentView('form');
+                      setCurrentView('users');
                     }}
                     className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                      currentView === 'form' && !activeSpkForEdit ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
+                      currentView === 'users' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
                     }`}
                   >
-                    <PlusCircle className="h-4 w-4 text-emerald-600" />
-                    Buat SPK
+                    <Users className="h-4 w-4 text-rose-600" />
+                    Manajemen Pengguna
                   </button>
                 )}
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveSpkForEdit(null);
-                    setCurrentView('profile');
-                  }}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                    currentView === 'profile' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'
-                  }`}
-                >
-                  <UserCog className="h-4 w-4 text-teal-600" />
-                  Pengelolaan Akun
-                </button>
               </div>
 
             </div>
@@ -352,52 +404,73 @@ export default function App() {
               Dashboard Utama
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setCurrentView('calendar');
-                setActiveSpkForEdit(null);
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                currentView === 'calendar' ? 'bg-slate-100 text-indigo-600' : 'text-slate-600'
-              }`}
-            >
-              <Calendar className="h-4.5 w-4.5" />
-              Kalender Pekerjaan
-            </button>
+            {currentUser.role !== 'Tamu' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentView('calendar');
+                    setActiveSpkForEdit(null);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold ${
+                    currentView === 'calendar' ? 'bg-slate-100 text-indigo-600' : 'text-slate-600'
+                  }`}
+                >
+                  <Calendar className="h-4.5 w-4.5" />
+                  Kalender Pekerjaan
+                </button>
 
-            {canCreateSpk && (
+                {canCreateSpk && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveSpkForEdit(null);
+                      setCurrentView('form');
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold ${
+                      currentView === 'form' && !activeSpkForEdit ? 'bg-slate-100 text-emerald-600' : 'text-slate-600'
+                    }`}
+                  >
+                    <PlusCircle className="h-4.5 w-4.5" />
+                    Buat Surat Perintah Kerja (SPK)
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSpkForEdit(null);
+                    setCurrentView('profile');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold ${
+                    currentView === 'profile' ? 'bg-slate-100 text-teal-600' : 'text-slate-600'
+                  }`}
+                >
+                  <UserCog className="h-4.5 w-4.5" />
+                  Pengelolaan Akun
+                </button>
+              </>
+            )}
+
+            {currentUser.role === 'Admin' && (
               <button
                 type="button"
                 onClick={() => {
                   setActiveSpkForEdit(null);
-                  setCurrentView('form');
+                  setCurrentView('users');
                   setMobileMenuOpen(false);
                 }}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                  currentView === 'form' && !activeSpkForEdit ? 'bg-slate-100 text-emerald-600' : 'text-slate-600'
+                  currentView === 'users' ? 'bg-slate-100 text-rose-600' : 'text-slate-600'
                 }`}
               >
-                <PlusCircle className="h-4.5 w-4.5" />
-                Buat Surat Perintah Kerja (SPK)
+                <Users className="h-4.5 w-4.5 text-rose-600" />
+                Manajemen Pengguna
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={() => {
-                setActiveSpkForEdit(null);
-                setCurrentView('profile');
-                setMobileMenuOpen(false);
-              }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                currentView === 'profile' ? 'bg-slate-100 text-teal-600' : 'text-slate-600'
-              }`}
-            >
-              <UserCog className="h-4.5 w-4.5" />
-              Pengelolaan Akun
-            </button>
 
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
               <div className="flex items-center gap-1">
@@ -497,6 +570,17 @@ export default function App() {
               setCurrentUser(updatedProfile);
             }}
             onInitiateLogin={() => setIsAuthenticating(true)}
+            onToggleFirebaseMode={(active) => {
+              authService.setFirebaseMode(active);
+              setIsFirebaseActive(active);
+            }}
+          />
+        )}
+
+        {currentView === 'users' && currentUser.role === 'Admin' && (
+          <UserManagement 
+            currentUser={currentUser}
+            isFirebaseActive={isFirebaseActive}
           />
         )}
       </main>

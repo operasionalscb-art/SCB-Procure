@@ -21,13 +21,15 @@ interface AccountManagementProps {
   isFirebaseActive: boolean;
   onUpdateProfile: (updatedProfile: UserProfile) => void;
   onInitiateLogin?: () => void;
+  onToggleFirebaseMode?: (active: boolean) => void;
 }
 
 export default function AccountManagement({
   currentUser,
   isFirebaseActive,
   onUpdateProfile,
-  onInitiateLogin
+  onInitiateLogin,
+  onToggleFirebaseMode
 }: AccountManagementProps) {
   const [displayName, setDisplayName] = useState(currentUser.displayName);
   const [selectedRole, setSelectedRole] = useState<UserProfile['role']>(currentUser.role);
@@ -36,8 +38,8 @@ export default function AccountManagement({
 
   const rolesList: UserProfile['role'][] = [
     'Admin',
-    'Pejabat Pembuat Komitmen',
-    'Penyedia',
+    'Staf GA',
+    'Pegawai',
     'Tamu'
   ];
 
@@ -152,6 +154,38 @@ export default function AccountManagement({
                   {currentUser.uid}
                 </span>
               </div>
+
+              {onToggleFirebaseMode && (
+                <div className="pt-4 border-t border-slate-100 space-y-2">
+                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Ubah Aliran Database
+                  </span>
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => onToggleFirebaseMode(true)}
+                      className={`py-1.5 rounded-lg text-[10px] font-bold text-center cursor-pointer transition ${
+                        isFirebaseActive 
+                          ? 'bg-blue-600 text-white shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Firebase Live
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onToggleFirebaseMode(false)}
+                      className={`py-1.5 rounded-lg text-[10px] font-bold text-center cursor-pointer transition ${
+                        !isFirebaseActive 
+                          ? 'bg-amber-600 text-white shadow-sm' 
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Sandbox Lokal
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
