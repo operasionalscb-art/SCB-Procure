@@ -78,24 +78,12 @@ const DEFAULT_USERS: UserProfile[] = [
 export const authService = {
   // Check if we prefer or can use Firebase Firestore
   isFirebaseActive(): boolean {
-    const preference = localStorage.getItem('prefer_firebase');
-    if (preference === 'false') return false;
     return isFirebaseConfigured && db !== null;
-  },
-
-  setFirebaseMode(active: boolean) {
-    localStorage.setItem('prefer_firebase', active ? 'true' : 'false');
   },
 
   // Initialize and Seed Default Users
   async initializeDatabase(): Promise<boolean> {
-    // 1. Always seed LocalStorage so it has fallback data immediately
-    const localUsersStr = localStorage.getItem('local_users');
-    if (!localUsersStr) {
-      localStorage.setItem('local_users', JSON.stringify(DEFAULT_USERS));
-    }
-
-    // 2. Try seeding Cloud Firestore if reachable
+    // Try seeding Cloud Firestore if reachable
     if (this.isFirebaseActive() && db) {
       try {
         // Check if seed exists by loading first document
@@ -111,7 +99,7 @@ export const authService = {
         }
         return true;
       } catch (err) {
-        console.warn('Unable to write seeds to Firebase Firestore. Continuing with Local Fallback.', err);
+        console.error('Unable to write seeds to Firebase Firestore.', err);
         return false;
       }
     }
@@ -127,7 +115,7 @@ export const authService = {
   }): Promise<UserProfile> {
     const normalizedEmail = payload.email.toLowerCase().trim();
     
-    // Check if user already exists (in Local or Firebase)
+    // Check if user already exists
     const existingUsers = await this.getAllUsers();
     const emailConflict = existingUsers.some(u => u.email.toLowerCase() === normalizedEmail);
     if (emailConflict) {
@@ -148,19 +136,11 @@ export const authService = {
 
     // Save to Firestore
     if (this.isFirebaseActive() && db) {
-      try {
-        await setDoc(doc(db, 'app_users', newUid), newProfile);
-        // Sync to local list as well
-        this.saveUserToLocalList(newProfile);
-        return newProfile;
-      } catch (err) {
-        console.warn('Firebase register failed, saving to local storage fallback...', err);
-      }
+      await setDoc(doc(db, 'app_users', newUid), newProfile);
+      return newProfile;
+    } else {
+      throw new Error('Gagal menyimpan pengguna baru: Firebase Cloud tidak terhubung.');
     }
-
-    // Local Storage Fallback
-    this.saveUserToLocalList(newProfile);
-    return newProfile;
   },
 
   // Log in
@@ -177,7 +157,7 @@ export const authService = {
       throw new Error('Email atau kata sandi Anda salah. Silakan coba lagi.');
     }
 
-    // Save session state to LocalStorage as requested (key: 'app_auth' and 'app_user')
+    // Save session state to LocalStorage
     this.saveSession(userMatch);
     return userMatch;
   },
@@ -211,33 +191,14 @@ export const authService = {
   // Get all users (Admin view & login resolution)
   async getAllUsers(): Promise<UserProfile[]> {
     if (this.isFirebaseActive() && db) {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'app_users'));
-        const cloudUsers: UserProfile[] = [];
-        querySnapshot.forEach((docSnap) => {
-          cloudUsers.push(docSnap.data() as UserProfile);
-        });
-        
-        if (cloudUsers.length > 0) {
-          // Keep local storage list in sync with cloud
-          localStorage.setItem('local_users', JSON.stringify(cloudUsers));
-          return cloudUsers;
-        }
-      } catch (err) {
-        console.warn('Failed to fetch users from Live Firebase, reading from local sandbox...', err);
-      }
+      const querySnapshot = await getDocs(collection(db, 'app_users'));
+      const cloudUsers: UserProfile[] = [];
+      querySnapshot.forEach((docSnap) => {
+        cloudUsers.push(docSnap.data() as UserProfile);
+      });
+      return cloudUsers;
     }
-
-    // Local Fallback
-    const localStr = localStorage.getItem('local_users');
-    if (localStr) {
-      try {
-        return JSON.parse(localStr);
-      } catch (e) {
-        return DEFAULT_USERS;
-      }
-    }
-    return DEFAULT_USERS;
+    throw new Error('Firebase Cloud tidak terhubung atau database bermasalah.');
   },
 
   // Update a single user profile (Admin edit or self edit)
@@ -257,16 +218,10 @@ export const authService = {
 
     // Update in live Firestore
     if (this.isFirebaseActive() && db) {
-      try {
-        await setDoc(doc(db, 'app_users', uid), updatedProfile);
-      } catch (err) {
-        console.warn('Failed to update live user in Firestore, performing local-only edit...', err);
-      }
+      await setDoc(doc(db, 'app_users', uid), updatedProfile);
+    } else {
+      throw new Error('Failed to update user: Firebase Cloud tidak aktif.');
     }
-
-    // Always update Local Storage
-    users[index] = updatedProfile;
-    localStorage.setItem('local_users', JSON.stringify(users));
 
     // If current logged-in user is updated, sync their active session
     const activeSession = this.getActiveSession();
@@ -275,29 +230,5 @@ export const authService = {
     }
 
     return updatedProfile;
-  },
-
-  // Helper: Save user profile to local list
-  saveUserToLocalList(user: UserProfile) {
-    const localUsersStr = localStorage.getItem('local_users');
-    let localUsers: UserProfile[] = [];
-    if (localUsersStr) {
-      try {
-        localUsers = JSON.parse(localUsersStr);
-      } catch (e) {
-        localUsers = [...DEFAULT_USERS];
-      }
-    } else {
-      localUsers = [...DEFAULT_USERS];
-    }
-    
-    // De-duplicate if existing
-    const idx = localUsers.findIndex(u => u.uid === user.uid);
-    if (idx !== -1) {
-      localUsers[idx] = user;
-    } else {
-      localUsers.push(user);
-    }
-    localStorage.setItem('local_users', JSON.stringify(localUsers));
   }
 };

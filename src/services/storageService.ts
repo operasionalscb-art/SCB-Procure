@@ -138,263 +138,13 @@ const DEFAULT_USERS: UserProfile[] = [
   }
 ];
 
-// Helper to initialize local storage
-const initLocalStorage = () => {
-  if (!localStorage.getItem('spk_data')) {
-    localStorage.setItem('spk_data', JSON.stringify(MOCK_SPKS));
-  }
-  if (!localStorage.getItem('spk_users')) {
-    localStorage.setItem('spk_users', JSON.stringify(DEFAULT_USERS));
-  }
-};
-
-initLocalStorage();
-
 // ==========================================
 // STORAGE SERVICE IMPLEMENTATION
 // ==========================================
 export const storageService = {
   // Check if real Firebase is configured
   isFirebaseActive(): boolean {
-    if (localStorage.getItem('prefer_local_sandbox') === 'true') {
-      return false;
-    }
-    return isFirebaseConfigured && db !== null && auth !== null;
-  },
-
-  // Set Firebase Mode preference
-  setFirebaseActive(active: boolean) {
-    localStorage.setItem('prefer_local_sandbox', active ? 'false' : 'true');
-  },
-
-  // ------------------------------------------
-  // USER PROFILE & AUTHENTICATION FUNCTIONS
-  // ------------------------------------------
-  
-  // Custom auth listener
-  onAuthChanged(callback: (user: UserProfile | null) => void) {
-    if (this.isFirebaseActive() && auth) {
-      return onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-          // Fetch additional profile info from firestore
-          try {
-            const userDoc = await getDoc(doc(db!, 'users', firebaseUser.uid));
-            if (userDoc.exists()) {
-              callback(userDoc.data() as UserProfile);
-            } else {
-              // Fallback default profile
-              callback({
-                uid: firebaseUser.uid,
-                email: firebaseUser.email || '',
-                displayName: firebaseUser.displayName || 'Pengguna Baru',
-                role: 'Pegawai',
-                permissions: {
-                  canViewDashboard: true,
-                  canManageUsers: false,
-                  canCreateReports: true,
-                  canApproveRequests: false,
-                  canEditSettings: false
-                },
-                createdAt: new Date().toISOString()
-              });
-            }
-          } catch (e) {
-            callback({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || 'Pengguna',
-              role: 'Pegawai',
-              permissions: {
-                canViewDashboard: true,
-                canManageUsers: false,
-                canCreateReports: true,
-                canApproveRequests: false,
-                canEditSettings: false
-              },
-              createdAt: new Date().toISOString()
-            });
-          }
-        } else {
-          callback(null);
-        }
-      });
-    } else {
-      // Local Storage Auth Listener
-      const handleStorageAuth = () => {
-        const currentUser = localStorage.getItem('spk_current_user');
-        if (currentUser) {
-          callback(JSON.parse(currentUser));
-        } else {
-          callback(null);
-        }
-      };
-      
-      // Call once initially
-      handleStorageAuth();
-      
-      // Poll or listen to storage changes
-      const interval = setInterval(handleStorageAuth, 1000);
-      return () => clearInterval(interval);
-    }
-  },
-
-  async login(email: string, password: string): Promise<UserProfile> {
-    if (this.isFirebaseActive() && auth) {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-      
-      // Get profile from doc
-      const userDoc = await getDoc(doc(db!, 'users', uid));
-      if (userDoc.exists()) {
-        return userDoc.data() as UserProfile;
-      } else {
-        const defaultProf: UserProfile = {
-          uid,
-          email,
-          displayName: userCredential.user.displayName || email.split('@')[0],
-          role: email.includes('admin') ? 'Admin' : email.includes('ga') ? 'Staf GA' : 'Pegawai',
-          permissions: email.includes('admin') ? {
-            canViewDashboard: true,
-            canManageUsers: true,
-            canCreateReports: true,
-            canApproveRequests: true,
-            canEditSettings: true
-          } : {
-            canViewDashboard: true,
-            canManageUsers: false,
-            canCreateReports: true,
-            canApproveRequests: false,
-            canEditSettings: false
-          },
-          createdAt: new Date().toISOString()
-        };
-        // Save profile
-        await setDoc(doc(db!, 'users', uid), defaultProf);
-        return defaultProf;
-      }
-    } else {
-      // Offline local auth
-      const usersStr = localStorage.getItem('spk_users') || '[]';
-      const users: UserProfile[] = JSON.parse(usersStr);
-      
-      const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      if (foundUser) {
-        // Any password works in offline sandbox mode
-        localStorage.setItem('spk_current_user', JSON.stringify(foundUser));
-        return foundUser;
-      } else {
-        // Create an on-the-fly offline profile if it's a new email
-        const newProf: UserProfile = {
-          uid: 'user-' + Date.now(),
-          email,
-          displayName: email.split('@')[0].toUpperCase(),
-          role: email.includes('admin') ? 'Admin' : email.includes('ga') ? 'Staf GA' : 'Pegawai',
-          permissions: email.includes('admin') ? {
-            canViewDashboard: true,
-            canManageUsers: true,
-            canCreateReports: true,
-            canApproveRequests: true,
-            canEditSettings: true
-          } : {
-            canViewDashboard: true,
-            canManageUsers: false,
-            canCreateReports: true,
-            canApproveRequests: false,
-            canEditSettings: false
-          },
-          createdAt: new Date().toISOString()
-        };
-        users.push(newProf);
-        localStorage.setItem('spk_users', JSON.stringify(users));
-        localStorage.setItem('spk_current_user', JSON.stringify(newProf));
-        return newProf;
-      }
-    }
-  },
-
-  async register(email: string, password: string, displayName: string, role: UserProfile['role']): Promise<UserProfile> {
-    if (this.isFirebaseActive() && auth) {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = userCredential.user.uid;
-      
-      const profile: UserProfile = {
-        uid,
-        email,
-        displayName,
-        role,
-        permissions: role === 'Admin' ? {
-          canViewDashboard: true,
-          canManageUsers: true,
-          canCreateReports: true,
-          canApproveRequests: true,
-          canEditSettings: true
-        } : role === 'Staf GA' ? {
-          canViewDashboard: true,
-          canManageUsers: false,
-          canCreateReports: true,
-          canApproveRequests: true,
-          canEditSettings: false
-        } : {
-          canViewDashboard: true,
-          canManageUsers: false,
-          canCreateReports: true,
-          canApproveRequests: false,
-          canEditSettings: false
-        },
-        createdAt: new Date().toISOString()
-      };
-      
-      await setDoc(doc(db!, 'users', uid), profile);
-      return profile;
-    } else {
-      const usersStr = localStorage.getItem('spk_users') || '[]';
-      const users: UserProfile[] = JSON.parse(usersStr);
-      
-      const exists = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-      if (exists) {
-        throw new Error('Email sudah terdaftar di sistem!');
-      }
-      
-      const newProf: UserProfile = {
-        uid: 'user-' + Date.now(),
-        email,
-        displayName,
-        role,
-        permissions: role === 'Admin' ? {
-          canViewDashboard: true,
-          canManageUsers: true,
-          canCreateReports: true,
-          canApproveRequests: true,
-          canEditSettings: true
-        } : role === 'Staf GA' ? {
-          canViewDashboard: true,
-          canManageUsers: false,
-          canCreateReports: true,
-          canApproveRequests: true,
-          canEditSettings: false
-        } : {
-          canViewDashboard: true,
-          canManageUsers: false,
-          canCreateReports: true,
-          canApproveRequests: false,
-          canEditSettings: false
-        },
-        createdAt: new Date().toISOString()
-      };
-      
-      users.push(newProf);
-      localStorage.setItem('spk_users', JSON.stringify(users));
-      localStorage.setItem('spk_current_user', JSON.stringify(newProf));
-      return newProf;
-    }
-  },
-
-  async logout(): Promise<void> {
-    if (this.isFirebaseActive() && auth) {
-      await signOut(auth);
-    } else {
-      localStorage.removeItem('spk_current_user');
-    }
+    return isFirebaseConfigured && db !== null;
   },
 
   // ------------------------------------------
@@ -424,22 +174,12 @@ export const storageService = {
         
         return list;
       } catch (error) {
-        console.error('Error fetching SPK from Firebase, trying Local Storage fallback.', error);
-        return this.getLocalSPKs();
+        console.error('Error fetching SPK from Firebase.', error);
+        throw error;
       }
     } else {
-      return this.getLocalSPKs();
+      throw new Error('Firebase Cloud tidak terhubung atau database bermasalah.');
     }
-  },
-
-  getLocalSPKs(): SPK[] {
-    const spkStr = localStorage.getItem('spk_data');
-    if (spkStr) {
-      const list = JSON.parse(spkStr) as SPK[];
-      // Ensure sorted by createdAt desc
-      return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
-    return [];
   },
 
   async saveSPK(spkData: Omit<SPK, 'id' | 'createdAt'>): Promise<SPK> {
@@ -456,23 +196,12 @@ export const storageService = {
           ...newRecord
         } as SPK;
       } catch (error) {
-        console.error('Error adding SPK to Firestore, writing to Local Storage instead.', error);
-        return this.saveLocalSPK(newRecord);
+        console.error('Error adding SPK to Firestore.', error);
+        throw error;
       }
     } else {
-      return this.saveLocalSPK(newRecord);
+      throw new Error('Firebase Cloud tidak terhubung atau database bermasalah.');
     }
-  },
-
-  saveLocalSPK(newRecord: Omit<SPK, 'id'>): SPK {
-    const current = this.getLocalSPKs();
-    const withId: SPK = {
-      id: 'spk-' + Date.now(),
-      ...newRecord
-    };
-    current.push(withId);
-    localStorage.setItem('spk_data', JSON.stringify(current));
-    return withId;
   },
 
   async updateSPK(id: string, updatedFields: Partial<SPK>): Promise<void> {
@@ -482,23 +211,12 @@ export const storageService = {
         await updateDoc(docRef, updatedFields);
         return;
       } catch (error) {
-        console.error('Error updating Firestore SPK, writing to Local Storage fallback.', error);
-        this.updateLocalSPK(id, updatedFields);
+        console.error('Error updating Firestore SPK.', error);
+        throw error;
       }
     } else {
-      this.updateLocalSPK(id, updatedFields);
+      throw new Error('Firebase Cloud tidak terhubung atau database bermasalah.');
     }
-  },
-
-  updateLocalSPK(id: string, updatedFields: Partial<SPK>): void {
-    const current = this.getLocalSPKs();
-    const updated = current.map(item => {
-      if (item.id === id) {
-        return { ...item, ...updatedFields };
-      }
-      return item;
-    });
-    localStorage.setItem('spk_data', JSON.stringify(updated));
   },
 
   async deleteSPK(id: string): Promise<void> {
@@ -508,17 +226,11 @@ export const storageService = {
         await deleteDoc(docRef);
         return;
       } catch (error) {
-        console.error('Error deleting SPK from Firestore, running Local Storage fallback.', error);
-        this.deleteLocalSPK(id);
+        console.error('Error deleting SPK from Firestore.', error);
+        throw error;
       }
     } else {
-      this.deleteLocalSPK(id);
+      throw new Error('Firebase Cloud tidak terhubung atau database bermasalah.');
     }
-  },
-
-  deleteLocalSPK(id: string): void {
-    const current = this.getLocalSPKs();
-    const filtered = current.filter(item => item.id !== id);
-    localStorage.setItem('spk_data', JSON.stringify(filtered));
   }
 };

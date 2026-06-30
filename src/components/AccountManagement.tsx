@@ -13,23 +13,18 @@ import {
   KeyRound
 } from 'lucide-react';
 import { UserProfile } from '../types';
-import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { authService } from '../services/authService';
 
 interface AccountManagementProps {
   currentUser: UserProfile;
-  isFirebaseActive: boolean;
   onUpdateProfile: (updatedProfile: UserProfile) => void;
   onInitiateLogin?: () => void;
-  onToggleFirebaseMode?: (active: boolean) => void;
 }
 
 export default function AccountManagement({
   currentUser,
-  isFirebaseActive,
   onUpdateProfile,
-  onInitiateLogin,
-  onToggleFirebaseMode
+  onInitiateLogin
 }: AccountManagementProps) {
   const [displayName, setDisplayName] = useState(currentUser.displayName);
   const [selectedRole, setSelectedRole] = useState<UserProfile['role']>(currentUser.role);
@@ -53,33 +48,24 @@ export default function AccountManagement({
     setIsSaving(true);
     setMessage(null);
 
-    const updatedProfile: UserProfile = {
-      ...currentUser,
-      displayName: displayName.trim(),
-      role: selectedRole
-    };
-
     try {
-      if (isFirebaseActive && db && currentUser.uid !== 'guest') {
+      if (currentUser.uid !== 'guest') {
         // Update user document in live firestore database
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userDocRef, {
+        const updatedProfile = await authService.updateUserInfo(currentUser.uid, {
           displayName: displayName.trim(),
           role: selectedRole
         });
+        onUpdateProfile(updatedProfile);
       } else {
-        // Fallback or guest simulation updates in localStorage
-        const usersStr = localStorage.getItem('spk_users') || '[]';
-        const users: UserProfile[] = JSON.parse(usersStr);
-        const idx = users.findIndex(u => u.uid === currentUser.uid);
-        if (idx !== -1) {
-          users[idx] = updatedProfile;
-          localStorage.setItem('spk_users', JSON.stringify(users));
-        }
-        localStorage.setItem('spk_current_user', JSON.stringify(updatedProfile));
+        // Guest mode simulation update
+        const updatedProfile: UserProfile = {
+          ...currentUser,
+          displayName: displayName.trim(),
+          role: selectedRole
+        };
+        onUpdateProfile(updatedProfile);
       }
 
-      onUpdateProfile(updatedProfile);
       setMessage({ type: 'success', text: 'Profil akun berhasil diperbarui!' });
     } catch (err: any) {
       console.error(err);
@@ -126,19 +112,13 @@ export default function AccountManagement({
               </span>
             </div>
 
-            <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
+             <div className="mt-6 pt-6 border-t border-slate-100 space-y-4">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-400 font-medium">Status Koneksi</span>
                 <span className="font-extrabold flex items-center gap-1">
-                  {isFirebaseActive ? (
-                    <span className="text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                      <Cloud className="w-3 h-3" /> Live Firebase
-                    </span>
-                  ) : (
-                    <span className="text-amber-600 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
-                      <Database className="w-3 h-3" /> Offline Sandbox
-                    </span>
-                  )}
+                  <span className="text-emerald-600 flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                    <Cloud className="w-3 h-3" /> Live Firebase
+                  </span>
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
@@ -154,38 +134,6 @@ export default function AccountManagement({
                   {currentUser.uid}
                 </span>
               </div>
-
-              {onToggleFirebaseMode && (
-                <div className="pt-4 border-t border-slate-100 space-y-2">
-                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Ubah Aliran Database
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => onToggleFirebaseMode(true)}
-                      className={`py-1.5 rounded-lg text-[10px] font-bold text-center cursor-pointer transition ${
-                        isFirebaseActive 
-                          ? 'bg-blue-600 text-white shadow-sm' 
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      Firebase Live
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onToggleFirebaseMode(false)}
-                      className={`py-1.5 rounded-lg text-[10px] font-bold text-center cursor-pointer transition ${
-                        !isFirebaseActive 
-                          ? 'bg-amber-600 text-white shadow-sm' 
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      Sandbox Lokal
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 

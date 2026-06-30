@@ -18,16 +18,12 @@ import {
 
 interface LoginProps {
   onLoginSuccess: (user: UserProfile) => void;
-  isFirebaseActive: boolean;
   onCancel?: () => void;
-  onToggleFirebaseMode?: (active: boolean) => void;
 }
 
 export default function Login({ 
   onLoginSuccess, 
-  isFirebaseActive, 
-  onCancel, 
-  onToggleFirebaseMode 
+  onCancel
 }: LoginProps) {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
@@ -42,7 +38,7 @@ export default function Login({
   // Initialize DB Seeds on load
   useEffect(() => {
     authService.initializeDatabase().catch(console.error);
-  }, [isFirebaseActive]);
+  }, []);
 
   const divisionsList = [
     'Asrama',
@@ -140,86 +136,23 @@ export default function Login({
           Gerbang Autentikasi dan Registrasi Mandiri Pengguna Sekolah Cendekia Bersaudara
         </p>
         
-        {/* Connection Status Indicator & Mode Switcher */}
+        {/* Connection Status Indicator */}
         <div className="mt-4 flex justify-center">
-          {isFirebaseActive ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
-              <Cloud className="h-3 w-3 text-emerald-500 animate-pulse" />
-              Firebase Cloud Terhubung
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-sm">
-              <Database className="h-3 w-3 text-amber-500" />
-              Offline Sandbox (LocalStorage) Active
-            </span>
-          )}
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm">
+            <Cloud className="h-3 w-3 text-emerald-500 animate-pulse" />
+            Firebase Cloud Terhubung
+          </span>
         </div>
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-5 shadow-md sm:rounded-3xl sm:px-10 border border-slate-100">
-          
-          {/* Method Selection Toggle (Firebase Live vs Sandbox) */}
-          {onToggleFirebaseMode && (
-            <div className="mb-6 grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-2xl">
-              <button
-                type="button"
-                onClick={() => {
-                  setError('');
-                  authService.setFirebaseMode(true);
-                  onToggleFirebaseMode(true);
-                }}
-                className={`py-2 px-3 rounded-xl text-xs font-bold text-center transition cursor-pointer ${
-                  isFirebaseActive 
-                    ? 'bg-blue-600 text-white shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Cloud Firestore (Live)
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setError('');
-                  authService.setFirebaseMode(false);
-                  onToggleFirebaseMode(false);
-                }}
-                className={`py-2 px-3 rounded-xl text-xs font-bold text-center transition cursor-pointer ${
-                  !isFirebaseActive 
-                    ? 'bg-amber-600 text-white shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                Sandbox Lokal (Offline)
-              </button>
-            </div>
-          )}
 
           {/* Messages Alert Block */}
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-xs p-4 rounded-2xl space-y-2">
-              <div className="flex gap-2 items-start">
-                <span className="font-extrabold shrink-0">Gagal:</span>
-                <span className="font-medium leading-relaxed">{error}</span>
-              </div>
-              {isFirebaseActive && onToggleFirebaseMode && (
-                <div className="pt-2 border-t border-red-100 space-y-2">
-                  <p className="text-slate-500 font-normal">
-                    Terjadi kendala koneksi ke database Firestore Cloud (misal: Rules belum diperbarui atau jaringan lambat).
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setError('');
-                      authService.setFirebaseMode(false);
-                      onToggleFirebaseMode(false);
-                    }}
-                    className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-1.5 px-3 rounded-xl transition text-center cursor-pointer"
-                  >
-                    Beralih ke Sandbox Offline &rarr;
-                  </button>
-                </div>
-              )}
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 text-xs p-4 rounded-2xl flex gap-2 items-start">
+              <span className="font-extrabold shrink-0">Gagal:</span>
+              <span className="font-medium leading-relaxed">{error}</span>
             </div>
           )}
 

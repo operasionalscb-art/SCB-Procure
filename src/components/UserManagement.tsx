@@ -23,10 +23,9 @@ import {
 
 interface UserManagementProps {
   currentUser: UserProfile;
-  isFirebaseActive: boolean;
 }
 
-export default function UserManagement({ currentUser, isFirebaseActive }: UserManagementProps) {
+export default function UserManagement({ currentUser }: UserManagementProps) {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -40,7 +39,7 @@ export default function UserManagement({ currentUser, isFirebaseActive }: UserMa
 
   useEffect(() => {
     loadUsers();
-  }, [isFirebaseActive]);
+  }, []);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -167,22 +166,11 @@ export default function UserManagement({ currentUser, isFirebaseActive }: UserMa
       </div>
 
       {/* Connection Indicator Alert */}
-      <div className={`mb-6 p-4 rounded-2xl border flex items-center justify-between gap-3 ${
-        isFirebaseActive 
-          ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
-          : 'bg-amber-50 border-amber-100 text-amber-800'
-      }`}>
+      <div className="mb-6 p-4 rounded-2xl border flex items-center justify-between gap-3 bg-emerald-50 border-emerald-100 text-emerald-800">
         <div className="flex items-center gap-2">
-          {isFirebaseActive ? (
-            <Check className="h-5 w-5 text-emerald-600 shrink-0" />
-          ) : (
-            <AlertCircle className="h-5 w-5 text-amber-600 shrink-0" />
-          )}
+          <Check className="h-5 w-5 text-emerald-600 shrink-0" />
           <span className="text-xs font-semibold leading-relaxed">
-            {isFirebaseActive 
-              ? 'Sinkronisasi Otomatis Cloud Firestore Aktif. Seluruh perubahan akan langsung direfleksikan secara realtime ke database.'
-              : 'Mode Sandbox Berjalan Lokal. Perubahan disimpan di penyimpanan offline terisolasi.'
-            }
+            Sinkronisasi Otomatis Cloud Firestore Aktif. Seluruh perubahan akan langsung direfleksikan secara realtime ke database.
           </span>
         </div>
       </div>

@@ -52,18 +52,14 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isFirebaseActive, setIsFirebaseActive] = useState(false);
 
   // 1. Listen for Authentication Changes & Seed Database
   useEffect(() => {
     const initSession = async () => {
-      // Setup Firebase mode indicator
-      setIsFirebaseActive(authService.isFirebaseActive());
-      
       // Auto seed db with default profiles
       await authService.initializeDatabase();
       
-      // Load active session (Dual Persistence key: 'app_auth' and 'app_user')
+      // Load active session
       const sessionUser = authService.getActiveSession();
       if (sessionUser) {
         setCurrentUser(sessionUser);
@@ -75,7 +71,7 @@ export default function App() {
     };
 
     initSession();
-  }, [isFirebaseActive]);
+  }, []);
 
   // 2. Fetch SPK Data on User Auth
   useEffect(() => {
@@ -169,17 +165,12 @@ export default function App() {
           setCurrentUser(user);
           setIsAuthenticating(false);
         }} 
-        isFirebaseActive={isFirebaseActive} 
         onCancel={() => {
           // If no user exists, set to GUEST_USER and allow them to proceed
           if (!currentUser) {
             setCurrentUser(GUEST_USER);
           }
           setIsAuthenticating(false);
-        }}
-        onToggleFirebaseMode={(active) => {
-          authService.setFirebaseMode(active);
-          setIsFirebaseActive(active);
         }}
       />
     );
@@ -298,18 +289,9 @@ export default function App() {
             <div className="hidden md:flex items-center gap-4">
               
               {/* DB Indicator badge */}
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full text-[10px] font-bold text-slate-600">
-                {isFirebaseActive ? (
-                  <>
-                    <Cloud className="h-3 w-3 text-emerald-500" />
-                    <span>Firebase</span>
-                  </>
-                ) : (
-                  <>
-                    <Database className="h-3 w-3 text-amber-500" />
-                    <span>Lokal Sandbox</span>
-                  </>
-                )}
+              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full text-[10px] font-bold text-emerald-700 shadow-sm">
+                <Cloud className="h-3 w-3 text-emerald-500 animate-pulse" />
+                <span>Firebase Cloud</span>
               </div>
 
               {/* Sync Refresh Button */}
@@ -565,22 +547,16 @@ export default function App() {
         {currentView === 'profile' && (
           <AccountManagement 
             currentUser={currentUser}
-            isFirebaseActive={isFirebaseActive}
             onUpdateProfile={(updatedProfile) => {
               setCurrentUser(updatedProfile);
             }}
             onInitiateLogin={() => setIsAuthenticating(true)}
-            onToggleFirebaseMode={(active) => {
-              authService.setFirebaseMode(active);
-              setIsFirebaseActive(active);
-            }}
           />
         )}
 
         {currentView === 'users' && currentUser.role === 'Admin' && (
           <UserManagement 
             currentUser={currentUser}
-            isFirebaseActive={isFirebaseActive}
           />
         )}
       </main>
